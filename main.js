@@ -27,6 +27,7 @@ async function main() {
         let checkArtifacts = core.getInput("check_artifacts")
         let searchArtifacts = core.getInput("search_artifacts")
         let dryRun = core.getInput("dry_run")
+        const failIfNotFound = core.getBooleanInput("fail_if_not_found")
 
         const client = github.getOctokit(token)
 
@@ -140,6 +141,13 @@ async function main() {
         }
 
         if (!runID) {
+            core.setOutput("found", false)
+
+            if (!failIfNotFound) {
+                core.info("no matching workflow run found with any artifacts")
+                return
+            }
+
             throw new Error("no matching workflow run found with any artifacts?")
         }
 
@@ -164,26 +172,35 @@ async function main() {
             artifacts = filtered
         }
 
-        if (dryRun) {
-            if (artifacts.length == 0) {
+        if (artifacts.length == 0) {
+            core.setOutput("found", false)
+
+            if (dryRun) {
                 core.setOutput("dry_run", false)
                 return
-            } else {
-                core.setOutput("dry_run", true)
-                core.info('==> (found) Artifacts')
-                for (const artifact of artifacts){
-                    const size = filesize(artifact.size_in_bytes, { base: 10 })
-                    core.info(`\t==> Artifact:`)
-                    core.info(`\t==> ID: ${artifact.id}`)
-                    core.info(`\t==> Name: ${artifact.name}`)
-                    core.info(`\t==> Size: ${size}`)
-                }
+            }
+
+            if (!failIfNotFound) {
+                core.info("no artifacts found")
                 return
             }
+
+            throw new Error("no artifacts found")
         }
 
-        if (artifacts.length == 0) {
-            throw new Error("no artifacts found")
+        core.setOutput("found", true)
+
+        if (dryRun) {
+            core.setOutput("dry_run", true)
+            core.info('==> (found) Artifacts')
+            for (const artifact of artifacts){
+                const size = filesize(artifact.size_in_bytes, { base: 10 })
+                core.info(`\t==> Artifact:`)
+                core.info(`\t==> ID: ${artifact.id}`)
+                core.info(`\t==> Name: ${artifact.name}`)
+                core.info(`\t==> Size: ${size}`)
+            }
+            return
         }
 
         for (const artifact of artifacts) {

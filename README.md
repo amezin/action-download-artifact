@@ -58,4 +58,8 @@ Let's suppose you have a workflow with a job in it that at the end uploads an ar
     # Optional, choose to skip unpacking the downloaded artifact(s)
     # default false
     skip_unpack: false
+    # Optional, fail the step if no artifacts are found.
+    # Set to 'false' if the action is used for optional cache, and missing artifact isn't actually an error.
+    # default true
+    fail_if_not_found: true
 ```

@@ -63,7 +63,16 @@ inputs:
   dry_run:
     description: Check the existence of artifact(s) without downloading.
     required: false
+  fail_if_not_found:
+    description: |
+      Fail the step if no artifacts are found.
+
+      Set to 'false' if the action is used for optional cache, and missing artifact isn't actually an error.
+    required: false
+    default: "true"
 outputs:
+  found:
+    description: Boolean output which is true if at least one artifact is found. Useful when fail_if_not_found is set to false.
   error_message:
     description: The error message, if an error occurs
   dry_run:
